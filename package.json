@@ -1,0 +1,19 @@
+{
+  "name": "sunset",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "luxon": "^1.24.1",
+    "node-hue-api": "^4.0.8",
+    "suncalc": "^1.8.0",
+    "sunrise-sunset-js": "^2.1.2"
+  }
+}
