@@ -36,24 +36,8 @@ const lightsAreOff = async () => {
 
   return {
     allOff: lights.every(light => !light._data.state.on),
-    lights
+    lights: lights.filter(light => light._data.state.on)
   };
-}
-
-const setAllLights = async (daySection) => {
-  await setApi();
-
-  const lights = await api.lights.getAll();
-
-  const settings = lightSettings[daySection];
-
-  const newState = new LightState().bri(settings.bri).xy(settings.xy);
-
-  lights.forEach(async (light) => {
-    const lightID = light._data.id;
-
-    await api.lights.setLightState(lightID, newState);
-  });
 }
 
 const getSunsetTimes = () => {
@@ -79,13 +63,9 @@ const transitionLights = async (times, lights) => {
   const xStep = xDiff / 30;
   const yStep = yDiff / 30;
 
-  const { minutes } = times.now.diff(times.thirtyBefore, 'minutes').toObject()
-
-  //console.log(briStep, minutes, Math.floor(briStep * minutes));
+  const { minutes } = times.now.diff(times.thirtyBefore, 'minutes').toObject();
 
   const newState = new LightState().bri(lightSettings.day.bri - (Math.floor(briStep * minutes))).xy(lightSettings.day.xy[0] + (xStep * minutes), lightSettings.day.xy[1] + (yStep * minutes));
-
-  //console.log(newState);
 
   lights.forEach(async (light) => {
     const lightID = light._data.id;
