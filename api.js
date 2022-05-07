@@ -1,4 +1,4 @@
-const v3 = require('node-hue-api').v3;
+const nodeHue = require('node-hue-api');
 const dotenv = require('dotenv');
 const dotenvParseVariables = require('dotenv-parse-variables');
 const fs = require("fs");
@@ -40,7 +40,7 @@ const createNewUser = async (host) => {
     console.log('*******************************************************************************\n');
 
     // Create a new API instance that is authenticated with the new user we created
-    const authenticatedApi = await v3.api.createLocal(host).connect(createdUser.username);
+    const authenticatedApi = await nodeHue.api.createLocal(host).connect(createdUser.username);
 
     // Do something with the authenticated user/api
     const bridgeConfig = await authenticatedApi.configuration.getConfiguration();
@@ -59,7 +59,7 @@ const createNewUser = async (host) => {
 }
 
 const findBridgeAndApi = async () => {
-  const bridgeSearch = await v3.discovery.nupnpSearch();
+  const bridgeSearch = await nodeHue.discovery.nupnpSearch();
 
   if (!bridgeSearch.length || !bridgeSearch[0].ipaddress) {
     return 'Cannot find bridge';
@@ -72,7 +72,7 @@ const findBridgeAndApi = async () => {
     updateEnv(newUser);
   }
 
-  const api = await v3.api.createLocal(host).connect(process.env.USERNAME);
+  const api = await nodeHue.api.createLocal(host).connect(process.env.USERNAME);
   
   return api;
 }

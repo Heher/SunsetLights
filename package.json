@@ -1,5 +1,5 @@
 {
-  "name": "sunset",
+  "name": "sunset-lights",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,7 +13,7 @@
     "dotenv-parse-variables": "^2.0.0",
     "express": "^4.18.1",
     "luxon": "^2.3.2",
-    "node-hue-api": "^4.0.8",
+    "node-hue-api": "5.0.0-beta.13",
     "suncalc": "^1.9.0",
     "sunrise-sunset-js": "^2.2.1"
   }

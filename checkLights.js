@@ -35,8 +35,8 @@ const lightsAreOff = async () => {
   const lights = await api.lights.getAll();
 
   return {
-    allOff: lights.every(light => !light._data.state.on),
-    lights: lights.filter(light => light._data.state.on)
+    allOff: lights.every(light => !light.data.state.on),
+    lights: lights.filter(light => light.data.state.on)
   };
 }
 
@@ -68,7 +68,7 @@ const transitionLights = async (times, lights) => {
   const newState = new LightState().bri(lightSettings.day.bri - (Math.floor(briStep * minutes))).xy(lightSettings.day.xy[0] + (xStep * minutes), lightSettings.day.xy[1] + (yStep * minutes));
 
   lights.forEach(async (light) => {
-    const lightID = light._data.id;
+    const lightID = light.data.id;
 
     await api.lights.setLightState(lightID, newState);
   });
