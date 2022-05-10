@@ -4,12 +4,12 @@ const dotenvParseVariables = require('dotenv-parse-variables');
 const fs = require("fs");
 const os = require("os");
 
-const env = dotenv.config();
+const env = dotenv.config({ path: '/home/pi/Hue/SunsetLights/.env' });
 
-const updateEnv = (newUser) => {
+const updateEnv = (keyName, value) => {
   const variables = dotenvParseVariables(env.parsed);
 
-  variables.USERNAME = newUser;
+  variables[keyName] = value;
 
   let variableArray = [];
 
@@ -17,7 +17,7 @@ const updateEnv = (newUser) => {
     variableArray.push(`${key}=${variables[key]}`);
   });
 
-  fs.writeFileSync("./.env", variableArray.join(os.EOL));
+  fs.writeFileSync("/home/pi/Hue/SunsetLights/.env", variableArray.join(os.EOL));
 }
 
 const createNewUser = async (host) => {
@@ -59,20 +59,24 @@ const createNewUser = async (host) => {
 }
 
 const findBridgeAndApi = async () => {
-  const bridgeSearch = await nodeHue.discovery.nupnpSearch();
+  if (!process.env.BRIDGE_IP) {
+    const bridgeSearch = await nodeHue.discovery.nupnpSearch();
 
-  if (!bridgeSearch.length || !bridgeSearch[0].ipaddress) {
-    return 'Cannot find bridge';
+    if (!bridgeSearch.length || !bridgeSearch[0].ipaddress) {
+      return 'Cannot find bridge';
+    }
+
+    const host = bridgeSearch[0].ipaddress;
+
+    updateEnv('BRIDGE_IP', host);
   }
-
-  const host = bridgeSearch[0].ipaddress;
 
   if (!process.env.USERNAME) {
     const newUser = await createNewUser(host)
-    updateEnv(newUser);
+    updateEnv('USERNAME', newUser);
   }
 
-  const api = await nodeHue.api.createLocal(host).connect(process.env.USERNAME);
+  const api = await nodeHue.api.createLocal(process.env.BRIDGE_IP).connect(process.env.USERNAME);
   
   return api;
 }
