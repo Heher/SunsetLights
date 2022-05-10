@@ -34,7 +34,7 @@ The Link button on the bridge was not pressed. Please press the Link button and 
 
 In that case, you should press the huge button on the top of the hub and try again.
 
-Once this runs the first time, it will create a new user on your hub and then store that username as a new key in your `.env` file. As long as you keep that username, the program will just use that instead of creating a new one every time.
+Once this runs the first time, it will create a new user on your hub and then store that username and the bridge's IP address as new keys in your `.env` file. As long as you keep that username, the program will just use that instead of creating a new one every time.
 
 ## Crontab
 
