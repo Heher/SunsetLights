@@ -1,11 +1,7 @@
-const SunCalc = require('suncalc');
-const { DateTime } = require('luxon');
 const v3 = require('node-hue-api').v3;
-const dotenv = require('dotenv');
+const fs = require('fs');
 
-const { findBridgeAndApi } = require('./api');
-
-dotenv.config();
+const { findBridgeAndApi } = require('../utils/api');
 
 const LightState = v3.lightStates.LightState;
 
@@ -22,6 +18,14 @@ const lightSettings = {
   }
 };
 
+const briDiff = lightSettings.day.bri - lightSettings.night.bri;
+const xDiff = lightSettings.night.xy[0] - lightSettings.day.xy[0];
+const yDiff = lightSettings.night.xy[1] - lightSettings.day.xy[1];
+
+const briStep = briDiff / 30;
+const xStep = xDiff / 30;
+const yStep = yDiff / 30;
+
 const setApi = async () => {
   if (!api) {
     api = await findBridgeAndApi();
@@ -34,36 +38,24 @@ const lightsAreOff = async () => {
   await setApi();
   const lights = await api.lights.getAll();
 
+  const excludedLightsFile = fs.readFileSync('/home/pi/Hue/SunsetLights/excluded-lights.json');
+  const excludedLights = JSON.parse(excludedLightsFile);
+
+  const includedLights = lights.filter((light) => {
+    return !excludedLights.includes(light.data.name)
+  });
+
   return {
-    allOff: lights.every(light => !light.data.state.on),
-    lights: lights.filter(light => light.data.state.on)
+    allOff: includedLights.every(light => !light.data.state.on),
+    lights: includedLights.filter(light => light.data.state.on)
   };
 }
 
-const getSunsetTimes = () => {
-  const sunTimes = SunCalc.getTimes(new Date(), process.env.SUNSET_LAT, process.env.SUNSET_LONG);
-  const convertedTime = DateTime.fromJSDate(sunTimes.sunset);
-  const thirtyBefore = convertedTime.minus({minutes: 30});
-  const now = DateTime.local();
-
-  return {
-    sunset: convertedTime,
-    thirtyBefore,
-    now
-  };
-};
 
 const transitionLights = async (times, lights) => {
   await setApi();
-  const briDiff = lightSettings.day.bri - lightSettings.night.bri;
-  const xDiff = lightSettings.night.xy[0] - lightSettings.day.xy[0];
-  const yDiff = lightSettings.night.xy[1] - lightSettings.day.xy[1];
 
-  const briStep = briDiff / 30;
-  const xStep = xDiff / 30;
-  const yStep = yDiff / 30;
-
-  const { minutes } = times.now.diff(times.thirtyBefore, 'minutes').toObject();
+  const { minutes } = times.now.diff(times.sunset.thirtyBefore, 'minutes').toObject();
 
   const newState = new LightState().bri(lightSettings.day.bri - (Math.floor(briStep * minutes))).xy(lightSettings.day.xy[0] + (xStep * minutes), lightSettings.day.xy[1] + (yStep * minutes));
 
@@ -74,7 +66,7 @@ const transitionLights = async (times, lights) => {
   });
 };
 
-const checkAndSetLights = async () => {
+const checkAndSetLights = async (sunTimes) => {
   await setApi();
 
   const result = await lightsAreOff();
@@ -83,14 +75,13 @@ const checkAndSetLights = async () => {
     return;
   }
 
-  const sunTimes = getSunsetTimes();
-  const day = sunTimes.now < sunTimes.thirtyBefore;
+  const day = sunTimes.now < sunTimes.sunset.thirtyBefore;
 
   if (day) {
     return;
   }
 
-  if (sunTimes.now > sunTimes.sunset) {
+  if (sunTimes.now > sunTimes.sunset.time) {
     return;
   } else {
     await transitionLights(sunTimes, result.lights);
