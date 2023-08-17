@@ -1,5 +1,6 @@
 import nodeHue from 'node-hue-api';
 import dotenv from 'dotenv';
+import { v3 } from 'node-hue-api';
 import dotenvParseVariables from 'dotenv-parse-variables';
 import fs from 'fs';
 import os from 'os';
@@ -25,16 +26,14 @@ function updateEnv(keyName: string, value: string): void {
   fs.writeFileSync('/home/pi/Hue/SunsetLights/.env', variableArray.join(os.EOL));
 }
 
-async function createNewUser(host) {
+async function createNewUser(host: string): Promise<string> {
   const appName = 'node-hue';
   const deviceName = 'home-server';
 
   const unauthenticatedApi = await v3.api.createLocal(host).connect();
 
-  let createdUser;
-
   try {
-    createdUser = await unauthenticatedApi.users.createUser(appName, deviceName);
+    const createdUser = await unauthenticatedApi.users.createUser(appName, deviceName);
     console.log(createdUser);
     console.log('*******************************************************************************\n');
     console.log(
