@@ -16,5 +16,12 @@
     "node-hue-api": "5.0.0-beta.13",
     "suncalc": "^1.9.0",
     "sunrise-sunset-js": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/dotenv-parse-variables": "^2.0.1",
+    "@types/luxon": "^3.3.1",
+    "@types/node": "^20.5.0",
+    "@types/suncalc": "^1.9.0",
+    "typescript": "^5.1.6"
   }
 }
