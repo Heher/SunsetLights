@@ -44,8 +44,8 @@ To get this to run every minute, set `crontab`:
 crontab -e
 ```
 
-NOTE: Replace `<absolute_path_to_runLights.js_file>` with the, like, actual path.
+NOTE: Replace `<absolute_path_to_index.js_file>` with the, like, actual path.
 
 ```sh
-* * * * * node <absolute_path_to_runLights.js_file>
+* * * * * node <absolute_path_to_index.js_file>
 ```
