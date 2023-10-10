@@ -1,5 +1,5 @@
 {
-  "name": "sunset-lights",
+  "name": "@heher/sunset-lights",
   "version": "1.0.0",
   "description": "Program to run every minute that will set all currently on Hue lights to slowly dim to an orange-ish color as the sun sets.",
   "author": "John Heher",
