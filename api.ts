@@ -1,40 +1,46 @@
-const nodeHue = require('node-hue-api');
-const dotenv = require('dotenv');
-const dotenvParseVariables = require('dotenv-parse-variables');
-const fs = require("fs");
-const os = require("os");
+import nodeHue from 'node-hue-api';
+import dotenv from 'dotenv';
+import { v3 } from 'node-hue-api';
+import dotenvParseVariables from 'dotenv-parse-variables';
+import fs from 'fs';
+import os from 'os';
+import { Api } from 'node-hue-api/dist/esm/api/Api';
 
 const env = dotenv.config({ path: '/home/pi/Hue/SunsetLights/.env' });
 
-const updateEnv = (keyName, value) => {
+function updateEnv(keyName: string, value: string): void {
+  if (!env?.parsed) {
+    throw new Error(`No .env file found in ${process.cwd()}`);
+  }
+
   const variables = dotenvParseVariables(env.parsed);
 
   variables[keyName] = value;
 
-  let variableArray = [];
+  let variableArray: string[] = [];
 
-  Object.keys(variables).forEach(key => {
+  Object.keys(variables).forEach((key) => {
     variableArray.push(`${key}=${variables[key]}`);
   });
 
-  fs.writeFileSync("/home/pi/Hue/SunsetLights/.env", variableArray.join(os.EOL));
+  fs.writeFileSync('/home/pi/Hue/SunsetLights/.env', variableArray.join(os.EOL));
 }
 
-const createNewUser = async (host) => {
+async function createNewUser(host: string): Promise<string> {
   const appName = 'node-hue';
   const deviceName = 'home-server';
 
   const unauthenticatedApi = await v3.api.createLocal(host).connect();
 
-  let createdUser;
-
   try {
-    createdUser = await unauthenticatedApi.users.createUser(appName, deviceName);
+    const createdUser = await unauthenticatedApi.users.createUser(appName, deviceName);
     console.log(createdUser);
     console.log('*******************************************************************************\n');
-    console.log('User has been created on the Hue Bridge. The following username can be used to\n' +
-                'authenticate with the Bridge and provide full local access to the Hue Bridge.\n' +
-                'YOU SHOULD TREAT THIS LIKE A PASSWORD\n');
+    console.log(
+      'User has been created on the Hue Bridge. The following username can be used to\n' +
+        'authenticate with the Bridge and provide full local access to the Hue Bridge.\n' +
+        'YOU SHOULD TREAT THIS LIKE A PASSWORD\n'
+    );
     console.log(`Hue Bridge User: ${createdUser.username}`);
     console.log(`Hue Bridge User Client Key: ${createdUser.clientkey}`);
     console.log('*******************************************************************************\n');
@@ -47,8 +53,7 @@ const createNewUser = async (host) => {
     console.log(`Connected to Hue Bridge: ${bridgeConfig.name} :: ${bridgeConfig.ipaddress}`);
 
     return createdUser.username;
-
-  } catch(err) {
+  } catch (err) {
     console.log(err);
     if (err.getHueErrorType() === 101) {
       console.error('The Link button on the bridge was not pressed. Please press the Link button and try again.');
@@ -58,27 +63,28 @@ const createNewUser = async (host) => {
   }
 }
 
-const findBridgeAndApi = async () => {
-  if (!process.env.BRIDGE_IP) {
+export async function findBridgeAndApi(): Promise<Api> {
+  let host = process?.env?.BRIDGE_IP;
+  let username = process?.env?.USERNAME;
+
+  if (!host) {
     const bridgeSearch = await nodeHue.discovery.nupnpSearch();
 
     if (!bridgeSearch.length || !bridgeSearch[0].ipaddress) {
-      return 'Cannot find bridge';
+      throw new Error('Cannot find bridge');
     }
 
-    const host = bridgeSearch[0].ipaddress;
+    host = bridgeSearch[0].ipaddress;
 
     updateEnv('BRIDGE_IP', host);
   }
 
-  if (!process.env.USERNAME) {
-    const newUser = await createNewUser(host)
-    updateEnv('USERNAME', newUser);
+  if (!username) {
+    const username = await createNewUser(host);
+    updateEnv('USERNAME', username);
   }
 
-  const api = await nodeHue.api.createLocal(process.env.BRIDGE_IP).connect(process.env.USERNAME);
-  
+  const api = await nodeHue.api.createLocal(host).connect(username);
+
   return api;
 }
-
-module.exports = { findBridgeAndApi };
